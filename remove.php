@@ -38,83 +38,97 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <?php
-        session_start();
+    session_start();
 
-        // 處理越權查看以及錯誤登入
-        if (!isset($_SESSION['account'])) {
-            echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
-            exit();
-        } 
-        
-        // 處理管理員調出使用者清單
-        include "db.php";
-        $sql = "SELECT * FROM product t1
-                JOIN wishlist t2 ON t1.PID = t2.PID
-                WHERE t2.ID = :ID";
-        $stmt = $link->prepare($sql);
-        $stmt -> bindParam(':ID', $_SESSION['ID']);
-        $stmt->execute();
-        
-        $html = "<table><tr><th></th><th>Image</th><th>Type</th><th>Name</th><th>Price</th><th></th></tr>";
-        while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
-        {
-            $html .= "<tr>";
-            $html .= "<td><form action=\"wishlist.php\" method=\"post\" onsubmit=\"return confirmDelete();\">"."<input type=\"hidden\" name=\"deletePID\" value=\"".$clothes['PID']."\">"."<button type=\"submit\" style=\"border: none; background-color: transparent; color: white;\" onmouseover=\"this.querySelector('fa.fa-close').style.color='black'\" onmouseout=\"this.querySelector('fa.fa-close').style.color='red'\"><fa class=\"fa fa-close\" style=\"color: red\"></fa></button></form></td>";
-            $html .= '<td><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="80" height="100"></td>';
-            $html .= "<td>" . htmlspecialchars($clothes['type']) . "</td>";
-            $html .= "<td>" . htmlspecialchars($clothes['name']) . "</td>";
-            $html .= "<td>$" . htmlspecialchars($clothes['price']) . "</td>";
-            $html .= '<td><form action="wishlist.php" method="post"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="padding: 10px 20px; background-color: transparent; border: 2px solid #000; color: #000; cursor: pointer;" onmouseover="this.style.borderColor=\'#ff6666\'; this.style.color=\'#ff6666\'" onmouseout="this.style.borderColor=\'#000\'; this.style.color=\'#000\'">Add To Cart</button></form></td>';
-            $html .= "</tr>";
-        }
-        $html .= "</table>";
-    ?>
-    <?php
-    if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
-        $PID = $_POST['addToCartPID'];
-        $userID = $_SESSION['ID'];
+    // 處理越權查看以及錯誤登入
+    if (!isset($_SESSION['account'])) 
+    {
+      echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
+      exit();
+    } 
+    else if ($_SESSION['role'] != "admin") 
+    {
+      echo "<script>alert('無權訪問'); window.location.href = 'logout.php';</script>";
+      exit();
+    }
 
-        // 检查购物车中是否已存在相同产品
-        $checkCartExists = $link->prepare("SELECT * FROM cart WHERE PID = :PID AND ID = :userID");
-        $checkCartExists->bindParam(':PID', $PID);
-        $checkCartExists->bindParam(':userID', $userID);
-        $checkCartExists->execute();
-        $existingCartItem = $checkCartExists->fetch(PDO::FETCH_ASSOC);
+    // 處理管理員調出使用者清單
+    include "db.php";
+    
+    // Pagination variables
+    $limit = 10; // Number of items per page
+    $page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
+    $offset = ($page - 1) * $limit; // Offset for SQL query
 
-        if ($existingCartItem) {
-            // 如果购物车中已存在相同产品，则更新数量
-            $quantity = $existingCartItem['quantity'] + 1;
-            $updateQuantityStmt = $link->prepare("UPDATE cart SET quantity = :quantity WHERE PID = :PID AND ID = :userID");
-            $updateQuantityStmt->bindParam(':quantity', $quantity);
-            $updateQuantityStmt->bindParam(':PID', $PID);
-            $updateQuantityStmt->bindParam(':userID', $userID);
-            $updateQuantityStmt->execute();
+    // Query to fetch products with pagination
+    $stmt = $link->prepare("SELECT * FROM `product` LIMIT :limit OFFSET :offset");
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    $html = "<table><tr><th></th><th>Image</th><th>Type</th><th>Name</th><th>Price</th></tr>";
+    while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+    {
+        $html .= "<tr>";
+        $html .= "<td><form action=\"remove.php\" method=\"post\" onsubmit=\"return confirmDelete();\">"."<input type=\"hidden\" name=\"deletePID\" value=\"".$clothes['PID']."\">"."<button type=\"submit\" style=\"border: none; background-color: transparent; color: white;\" onmouseover=\"this.querySelector('fa.fa-close').style.color='black'\" onmouseout=\"this.querySelector('fa.fa-close').style.color='red'\"><fa class=\"fa fa-close\" style=\"color: red\"></fa></button></form></td>";
+        $html .= '<td><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="80" height="100"></td>';
+        $html .= "<td>" . htmlspecialchars($clothes['type']) . "</td>";
+        $html .= "<td>" . htmlspecialchars($clothes['name']) . "</td>";
+        $html .= "<td>$" . htmlspecialchars($clothes['price']) . "</td>";
+        $html .= "</tr>";
+    }
+    $html .= "</table>";
+
+    // Count total number of products
+    $stmt_count = $link->prepare("SELECT COUNT(*) as total FROM `product`");
+    $stmt_count->execute();
+    $total_results = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Calculate total number of pages
+    $total_pages = ceil($total_results / $limit);
+
+    // Pagination links
+    $pagination_html = '';
+    if ($total_pages > 1) {
+        $pagination_html .= '<nav><ul class="pagination">';
+        $prev_page = $page - 1;
+        $next_page = $page + 1;
+        $pagination_html .= '<li>';
+        if ($page > 1) {
+            $pagination_html .= '<a href="?page=' . $prev_page . '" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>';
         } else {
-            // 如果购物车中不存在相同产品，则插入新记录
-            $stmt = $link->prepare("INSERT INTO `cart`(`ID`, `PID`, `quantity`) VALUES (:userID, :PID, 1)");
-            $stmt->bindParam(':userID', $userID);
-            $stmt->bindParam(':PID', $PID);
-            $stmt->execute();
+            $pagination_html .= '<span aria-hidden="true">&laquo;</span>';
         }
-
-        // 提示商品已加入购物车
-        echo "<script>alert('商品已加入購物車');</script>";
-        echo '<script>window.location.href="wishlist.php";</script>';
+        $pagination_html .= '</li>';
+        for ($i = 1; $i <= $total_pages; $i++) {
+            $pagination_html .= '<li';
+            if ($i == $page) {
+                $pagination_html .= ' class="active"';
+            }
+            $pagination_html .= '><a href="?page=' . $i . '">' . $i . '</a></li>';
+        }
+        $pagination_html .= '<li>';
+        if ($page < $total_pages) {
+            $pagination_html .= '<a href="?page=' . $next_page . '" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>';
+        } else {
+            $pagination_html .= '<span aria-hidden="true">&raquo;</span>';
+        }
+        $pagination_html .= '</li>';
+        $pagination_html .= '</ul></nav>';
     }
 ?>
-
+    
     <?php
         if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deletePID']))){
             include "db.php";
             $deleteProductID = $_POST['deletePID'];
-            $stmt = $link -> prepare("DELETE FROM `wishlist` WHERE PID = :deletePID");
+            $stmt = $link -> prepare("DELETE FROM `product` WHERE PID = :deletePID");
             $stmt->bindParam(':deletePID', $deleteProductID);
             $stmt->execute();
-
-            echo '<script>window.location.href="wishlist.php";</script>';
+            echo "<script>alert('已從上架中移除');</script>";
+            echo '<script>window.location.href="remove.php";</script>';
         }
     ?>
-    
   <style>
     table {
         width: 100%;
@@ -202,19 +216,20 @@
                 <div class="cellphone hidden-xs">
                   <p><span class="fa fa-phone"></span>09-87-654-321</p>
                 </div>
+
                 <!-- / cellphone -->
               </div>
               <!-- / header top left -->
               <div class="aa-header-top-right">
                 <ul class="aa-head-top-nav-right">
-                  <li><a href="myaccount.php" class="nav-item nav-link active"><?php echo "Welcome，". $_SESSION['account'];?></a></li>
+                  <li><a href="myaccount-admin.php" class="nav-item nav-link active"><?php echo "Welcome，". $_SESSION['account'];?></a></li>
                   <li><a href="logout.php" class="btn btn-danger rounded-0 py-4 px-lg-5 d-none d-lg-block" style="background-color: #ff6666; color: white;">Logout<i class="fa fa-arrow-right ms-3"></i></a></li>
-                  <li class="hidden-xs"><a href="wishlist.php">Wishlist</a></li>
-                  <li class="hidden-xs"><a href="cart.php">My Cart</a></li>
-                  <li class="hidden-xs"><a href="checkout.php">Checkout</a></li>
-                  <li class="hidden-xs"><a href="order.php">My Order</a></li>
+                  <li class="hidden-xs"><a href="upload.php">Upload</a></li>
+                  <li class="hidden-xs"><a href="remove.php">Remove</a></li>
+                  <li class="hidden-xs"><a href="order-admin.php">Order</a></li>
                 </ul>
               </div>
+              
             </div>
           </div>
         </div>
@@ -227,196 +242,41 @@
         <div class="row">
           <div class="col-md-12">
             <div class="aa-header-bottom-area">
-              <!-- logo  -->
               <div class="aa-logo">
-                <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="manageAccounts.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
-                <!-- img based logo -->
-                <!-- <a href="index.html"><img src="img/logo.jpg" alt="logo img"></a> -->
-              </div>
-              <!-- / logo  -->
-               <!-- cart box -->
-               <div class="aa-cartbox">
-    <a class="aa-cart-link" href="#">
-        <span class="fa fa-shopping-basket"></span>
-        <span class="aa-cart-title">SHOPPING CART</span>
-        <?php
-        $sql = "SELECT COUNT(*) as total FROM product t1
-                  JOIN cart t2 ON t1.PID = t2.PID
-                  WHERE t2.ID = :ID";
-        $stmt = $link->prepare($sql);
-        $stmt->bindParam(':ID', $_SESSION['ID']);
-        $stmt->execute();
-        $count = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        ?>
-        <span class="aa-cart-notify"><?php echo $count; ?></span>
-    </a>
-
-    <div class='aa-cartbox-summary'>
-        <ul>
-            <?php
-            $sql = "SELECT * FROM product t1
-                    JOIN cart t2 ON t1.PID = t2.PID
-                    WHERE t2.ID = :ID";
-            $stmt = $link->prepare($sql);
-            $stmt->bindParam(':ID', $_SESSION['ID']);
-            $stmt->execute();
-              
-            $total=0;
-            $displayed_count = 0; // 初始化已顯示計數器
-
-            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $subtotal = $clothes['price'] * $clothes['quantity']; 
-                $total += $subtotal;
-                if ($displayed_count < 3) {
-                    echo "<li>";
-                    echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
-                    echo "<div class='aa-cartbox-info'>";
-                    echo "<h4><a>" . htmlspecialchars($clothes['type']) . "</a></h4>";
-                    echo "<h4><a>" . htmlspecialchars($clothes['name']) . "</a></h4>";
-                    echo "<p>" . htmlspecialchars($clothes['quantity']) ." x $". htmlspecialchars($clothes['price']) . "</p>";
-                    echo "</div></li>";
-
-                    $displayed_count++; // 每顯示一個商品，計數器加1
-                } else {
-                    // 如果已顯示計數器超過3，則跳出迴圈
-                    break;
-                }
-            }
-            ?>
-        </ul>
-        <ul>
-          <li>
-    <span class="aa-cartbox-total-title">
-        Total
-    </span>
-    <span class="aa-cartbox-total-price">
-        <?php echo '$' . $total; ?>
-    </span>
-          </li>
-          </ul>
-        <?php
-        // 計算剩餘未顯示商品數量
-        $remaining_count = $count - $displayed_count;
-        if ($remaining_count > 0) 
-        {
-          echo "<a style='color: #ff6666;'>$remaining_count items not shown.</a>";
-        }
-        ?>
-        <a class='aa-cartbox-checkout aa-primary-btn' href='cart.php'>Check Cart</a>
-    </div>
-</div>
-              <!-- / cart box -->
-              <!-- search box -->
-              <div class="aa-search-box">
-                <form action="productall.php" method="GET">
-                  <input type="text" name="search" placeholder="Search here ex. 'T-shirts'">
-                    <button type="submit"><span class="fa fa-search"></span></button>
-                </form>
-              </div>
-              <!-- / search box -->             
+              </div>           
             </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- / header bottom  -->
   </header>
-  <!-- / header section -->
-  <!-- menu -->
-  <section id="menu">
-    <div class="container">
-      <div class="menu-area">
-        <!-- Navbar -->
-        <div class="navbar navbar-default" role="navigation">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>          
-          </div>
-          <div class="navbar-collapse collapse">
-            <!-- Left nav -->
-            <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
-              <li><a href="productall.php">ALL</a></li> 
-              <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
-                <ul class="dropdown-menu">                
-                  <li><a href="product1-1.php">Shirts</a></li>
-                  <li><a href="product1-2.php">T-Shirts</a></li>
-                </ul>
-              </li>
-              <li><a href="product2.php">Long Sleeve Top <span class="caret"></span></a>
-                <ul class="dropdown-menu">  
-                  <li><a href="product2-1.php">Shirts</a></li>                                                                
-                  <li><a href="product2-2.php">T-Shirts</a></li>              
-                </ul>
-              </li>
-              <li><a href="product3.php">Pants <span class="caret"></span></a>
-                <ul class="dropdown-menu">                
-                  <li><a href="product3-1.php">Shorts</a></li>
-                  <li><a href="product3-2.php">Trousers</a></li>
-                </ul>
-              </li>
-              <li><a href="product4.php">Coat</a></li>            
 
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div> 
-      </div>
-    </div>
-  </section>
-  <!-- / menu -->  
- 
-  <!-- catg header banner section -->
   <section id="aa-catg-head-banner">
    <img src="img/fashion/clothes.jpg" alt="fashion img">
    <div class="aa-catg-head-banner-area">
      <div class="container">
       <div class="aa-catg-head-banner-content">
-        <h2>Wishlist Page</h2>
+        <h2>Remove Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>                   
-          <li class="active">Wishlist</li>
+          <li><a href="manageAccounts.php">Home</a></li>                   
+          <li class="active">Remove</li>
         </ol>
       </div>
      </div>
    </div>
   </section>
+  <div class="container">
+    <div class="bg-light rounded h-100 d-flex align-items-center p-5"><?php echo $html;?></div>
+</div>
 
-  <section id="cart-view">
-   <div class="container">
-     <div class="row">
-       <div class="col-md-12">
-         <div class="cart-view-area">
-           <div class="cart-view-table">
-              <div><?php echo $html;?></div>
-             
-           </div>
-         </div>
-       </div>
-     </div>
-   </div>
- </section>
+<div class="aa-product-catg-pagination" style="text-align: center;">
+    <?php echo $pagination_html; ?>
+</div>
 
-  <!-- / catg header banner section -->
-
- <!-- Cart view section -->
- 
- <!-- / Cart view section -->
-
-
-  <!-- Subscribe section -->
-  
-  <!-- / Subscribe section -->
-
-  <!-- footer -->  
   <footer id="aa-footer">
     <!-- footer bottom -->
     <div class="aa-footer-top">

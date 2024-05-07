@@ -40,6 +40,11 @@
     <?php
       session_start();
       require_once 'db.php';
+      if (!isset($_SESSION['account'])) 
+      {
+        echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
+        exit(); 
+      }
     ?>
 
   </head>
@@ -101,6 +106,7 @@
                   <li class="hidden-xs"><a href="wishlist.php">Wishlist</a></li>
                   <li class="hidden-xs"><a href="cart.php">My Cart</a></li>
                   <li class="hidden-xs"><a href="checkout.php">Checkout</a></li>
+                  <li class="hidden-xs"><a href="order.php">My Order</a></li>
                 </ul>
               </div>
             </div>
@@ -167,9 +173,9 @@
               <!-- / cart box -->
               <!-- search box -->
               <div class="aa-search-box">
-                <form action="">
-                  <input type="text" name="" id="" placeholder="Search here ex. 'man' ">
-                  <button type="submit"><span class="fa fa-search"></span></button>
+                <form action="productall.php" method="GET">
+                  <input type="text" name="search" placeholder="Search here ex. 'T-shirts'">
+                    <button type="submit"><span class="fa fa-search"></span></button>
                 </form>
               </div>
               <!-- / search box -->             
@@ -198,33 +204,28 @@
             <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php">Home</a></li>
-              <li><a href="product.php">Short Sleeves <span class="caret"></span></a>
+              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="productall.php">ALL</a></li> 
+              <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shirts</a></li>
-                  <li><a href="product.php">T-Shirts</a></li>
-                  <li><a href="product.php">Vests</a></li>
+                  <li><a href="product1-1.php">Shirts</a></li>
+                  <li><a href="product1-2.php">T-Shirts</a></li>
                 </ul>
               </li>
-              <li><a href="product.php">Long Sleeve Top <span class="caret"></span></a>
+              <li><a href="product2.php">Long Sleeve Top <span class="caret"></span></a>
                 <ul class="dropdown-menu">  
-                  <li><a href="product.php">Shirts</a></li>                                                                
-                  <li><a href="product.php">T-Shirts</a></li>              
+                  <li><a href="product2-1.php">Shirts</a></li>                                                                
+                  <li><a href="product2-2.php">T-Shirts</a></li>              
                 </ul>
               </li>
-              <li><a href="product.php">Pants <span class="caret"></span></a>
+              <li><a href="product3.php">Pants <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shorts</a></li>
-                  <li><a href="product.php">Trousers</a></li>
+                  <li><a href="product3-1.php">Shorts</a></li>
+                  <li><a href="product3-2.php">Trousers</a></li>
                 </ul>
               </li>
-              <li><a href="product.php">Coat</a></li>            
-              <li><a href="product.php">Pages <span class="caret"></span></a>
-                <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shop Page</a></li>
-                  <li><a href="product-detail.php">Shop Single</a></li>                              
-                </ul>
-              </li>
+              <li><a href="product4.php">Coat</a></li>            
+
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -440,8 +441,7 @@
                   </figure>                     
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>                            
+                                                
                   </div>
                   <!-- product badge -->
                   <span class="aa-badge aa-sale" href="#">SALE!</span>
@@ -458,8 +458,7 @@
                   </figure>                      
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                   <!-- product badge -->
                    <span class="aa-badge aa-sold-out" href="#">Sold Out!</span>
@@ -476,8 +475,7 @@
                   </figcaption>
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                   <!-- product badge -->
                    <span class="aa-badge aa-hot" href="#">HOT!</span>
@@ -494,8 +492,7 @@
                   </figure>                     
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                 </li>
                 <!-- start single product item -->
@@ -510,8 +507,7 @@
                   </figure>                      
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                 </li>
                 <!-- start single product item -->
@@ -526,8 +522,7 @@
                   </figure>                     
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                   <!-- product badge -->
                   <span class="aa-badge aa-sold-out" href="#">Sold Out!</span>
@@ -544,8 +539,7 @@
                   </figure>                     
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>
+                    
                   </div>
                   <!-- product badge -->
                   <span class="aa-badge aa-hot" href="#">HOT!</span>
@@ -562,8 +556,7 @@
                   </figure>                     
                   <div class="aa-product-hvr-content">
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Add to Wishlist"><span class="fa fa-heart-o"></span></a>
-                    <a href="#" data-toggle="tooltip" data-placement="top" title="Compare"><span class="fa fa-exchange"></span></a>
-                    <a href="#" data-toggle2="tooltip" data-placement="top" title="Quick View" data-toggle="modal" data-target="#quick-view-modal"><span class="fa fa-search"></span></a>                            
+                                                
                   </div>
                   <!-- product badge -->
                   <span class="aa-badge aa-sale" href="#">SALE!</span>

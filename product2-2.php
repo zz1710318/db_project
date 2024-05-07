@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">    
-    <title>DE Shop | Cart Page</title>
+    <title>Daily Shop | Product</title>
     
     <!-- Font awesome -->
     <link href="css/font-awesome.css" rel="stylesheet">
@@ -38,129 +38,141 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <?php
-    session_start();
-
-    // 處理越權查看以及錯誤登入
-    if (!isset($_SESSION['account'])) {
+      session_start();
+      require_once 'db.php';
+      if (!isset($_SESSION['account'])) 
+      {
         echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
-        exit();
-    } 
-    
-    // 處理管理員調出使用者清單
-    include "db.php";
-    
-    // 如果表单提交了，则更新购物车中的数量
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-      // 如果提交了更新购物车数量的表单
-      if (isset($_POST['update_cart'])) {
-          if (isset($_POST['quantity'])) {
-              foreach ($_POST['quantity'] as $pid => $newQuantity) {
-                  // 使用准备语句更新购物车中的数量
-                  $updateStmt = $link->prepare("UPDATE cart SET quantity = :quantity WHERE ID = :ID AND PID = :PID");
-                  $updateStmt->bindParam(':quantity', $newQuantity);
-                  $updateStmt->bindParam(':ID', $_SESSION['ID']);
-                  $updateStmt->bindParam(':PID', $pid);
-                  $updateStmt->execute();
-              }
-          }
+        exit(); 
       }
-      // 如果提交了删除物品的表单
-      elseif (isset($_POST['deletePID'])) {
-          include "db.php";
-          $deleteProductID = $_POST['deletePID'];
-          $stmt = $link->prepare("DELETE FROM `cart` WHERE PID = :deletePID");
-          $stmt->bindParam(':deletePID', $deleteProductID);
-          $stmt->execute();
+      include "db.php";
+      $limit = 9; // Number of items per page
+      $page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
+      $offset = ($page - 1) * $limit; // Offset for SQL query
 
-          echo '<script>window.location.href="cart.php";</script>';
+    // Query to fetch products with pagination
+      $stmt = $link->prepare("SELECT * FROM `product` WHERE name LIKE '%T-shirts%' AND type = 'Long Sleeve Top' LIMIT :limit OFFSET :offset");
+      $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+      $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+      $stmt->execute();
+
+      $html = "";
+      while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+      {
+        $html .= '<li>';
+        $html .= '<figure>';
+        $html .= '<a class="aa-product-img" href="#"><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="250" height="300"></a>';
+        $html .= '<form action="product2-2.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
+        $html .= '<figcaption>';
+        $html .= '<h4 class="aa-product-title"><a href="#">' . htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name']) . '</a></h4>';
+        $html .= '<span class="aa-product-price">$' . htmlspecialchars($clothes['price']) . '</span>';
+        $html .= '</figcaption>';
+        $html .= '</figure>';
+        $html .= '<div class="aa-product-hvr-content">';
+        $html .= '<form action="product2-2.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
+        $html .= '</div>';
+        $html .= '</li>';
       }
-  }
-  
-    
-    
-    $sql = "SELECT * FROM product t1
-            JOIN cart t2 ON t1.PID = t2.PID
-            WHERE t2.ID = :ID";
-    $stmt = $link->prepare($sql);
-    $stmt->bindParam(':ID', $_SESSION['ID']);
-    $stmt->execute();
-    $total = 0;
 
-    $html = "<form action=\"\" method=\"post\">";
-    $html .= "<table><tr><th></th><th>Image</th><th>Type</th><th>Name</th><th>Price</th><th>Quantity</th><th>Total</th></tr>";
-    while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
-    {
-        $html .= "<tr>";
-        $html .= "<td><form action=\"cart.php\" method=\"post\" onsubmit=\"return confirmDelete();\">"."<input type=\"hidden\" name=\"deletePID\" value=\"".$clothes['PID']."\">"."<button type=\"submit\" style=\"border: none; background-color: transparent; color: white;\" onmouseover=\"this.querySelector('fa.fa-close').style.color='black'\" onmouseout=\"this.querySelector('fa.fa-close').style.color='red'\"><fa class=\"fa fa-close\" style=\"color: red\"></fa></button></form></td>";
-        $html .= '<td><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="80" height="100"></td>';
-        $html .= "<td>" . htmlspecialchars($clothes['type']) . "</td>";
-        $html .= "<td>" . htmlspecialchars($clothes['name']) . "</td>";
-        $html .= "<td>$" . htmlspecialchars($clothes['price']) . "</td>";
-        $html .= "<td><input type=\"number\" name=\"quantity[{$clothes['PID']}]\" value=\"{$clothes['quantity']}\" style=\"width: 50px; height: 35px;\" min=\"1\"></td>";
-        $subtotal = $clothes['price'] * $clothes['quantity'];
-        $html .= "<td>$" . $subtotal . "</td>"; 
-        $total += $subtotal;           
-        $html .= "</tr>";
+    // Count total number of products
+      $stmt_count = $link->prepare("SELECT COUNT(*) as total FROM `product` WHERE name LIKE '%T-shirts%' AND type = 'Long Sleeve Top'");
+      $stmt_count->execute();
+      $total_results = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Calculate total number of pages
+      $total_pages = ceil($total_results / $limit);
+
+    // Pagination links
+      $pagination_html = '';
+      if ($total_pages > 1) {
+        $pagination_html .= '<nav><ul class="pagination">';
+        $prev_page = $page - 1;
+        $next_page = $page + 1;
+        $pagination_html .= '<li>';
+        if ($page > 1) {
+            $pagination_html .= '<a href="?page=' . $prev_page . '" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>';
+        } else {
+            $pagination_html .= '<span aria-hidden="true">&laquo;</span>';
+        }
+        $pagination_html .= '</li>';
+        for ($i = 1; $i <= $total_pages; $i++) {
+            $pagination_html .= '<li';
+            if ($i == $page) {
+                $pagination_html .= ' class="active"';
+            }
+            $pagination_html .= '><a href="?page=' . $i . '">' . $i . '</a></li>';
+        }
+        $pagination_html .= '<li>';
+        if ($page < $total_pages) {
+            $pagination_html .= '<a href="?page=' . $next_page . '" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>';
+        } else {
+            $pagination_html .= '<span aria-hidden="true">&raquo;</span>';
+        }
+        $pagination_html .= '</li>';
+        $pagination_html .= '</ul></nav>';
     }
-    $html .= "</table>";
-    $html .= '<button type="submit" name="update_cart" value="1" class="aa-cart-view-btn">Update Cart</button>';
-    $html .= '<div class="cart-view-total">
-         <h4>Cart Totals</h4>
-         <table class="aa-totals-table">
-           <tbody>
-              <tr>
-               <th>Total</th>
-               <td>$' . $total . '</td>
-              </tr>
-           </tbody>
-         </table>
-         <a href="checkout.php" class="aa-cart-view-btn">Proced to Checkout</a>
-       </div>';
-    $html .= "</form>";
+    ?>
+
+<?php
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
+        $PID = $_POST['addToCartPID'];
+        $userID = $_SESSION['ID'];
+
+        // 检查购物车中是否已存在相同产品
+        $checkCartExists = $link->prepare("SELECT * FROM cart WHERE PID = :PID AND ID = :userID");
+        $checkCartExists->bindParam(':PID', $PID);
+        $checkCartExists->bindParam(':userID', $userID);
+        $checkCartExists->execute();
+        $existingCartItem = $checkCartExists->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingCartItem) {
+            // 如果购物车中已存在相同产品，则更新数量
+            $quantity = $existingCartItem['quantity'] + 1;
+            $updateQuantityStmt = $link->prepare("UPDATE cart SET quantity = :quantity WHERE PID = :PID AND ID = :userID");
+            $updateQuantityStmt->bindParam(':quantity', $quantity);
+            $updateQuantityStmt->bindParam(':PID', $PID);
+            $updateQuantityStmt->bindParam(':userID', $userID);
+            $updateQuantityStmt->execute();
+        } else {
+            // 如果购物车中不存在相同产品，则插入新记录
+            $stmt = $link->prepare("INSERT INTO `cart`(`ID`, `PID`, `quantity`) VALUES (:userID, :PID, 1)");
+            $stmt->bindParam(':userID', $userID);
+            $stmt->bindParam(':PID', $PID);
+            $stmt->execute();
+        }
+
+        // 提示商品已加入购物车
+        echo "<script>alert('商品已加入購物車');</script>";
+        echo '<script>window.location.href="product2-2.php";</script>';
+    }
 ?>
 
+    <?php
+        if (($_SERVER['REQUEST_METHOD'] === "POST")&&($_POST['addToWishlist'])){
+            $checkCartExists = $link->prepare("SELECT COUNT(*) FROM wishlist WHERE PID = :PID AND ID = :ID");
+            $checkCartExists -> bindParam(':PID', $_POST['PID']);
+            $checkCartExists -> bindParam(':ID', $_SESSION['ID']);
+            $checkCartExists -> execute();
+            if($checkCartExists->fetchColumn() > 0) {
+                ob_end_flush();
+                echo "<script>alert('該物品先前已加入我的願望清單');</script>";
+                echo '<script>window.location.href="product2-2.php";</script>';
+            } else {
+                $stmt = $link->prepare("INSERT INTO `wishlist`(`ID`, `PID`) VALUES (:ID, :PID)");
+                $stmt -> bindParam(':ID', $_SESSION['ID']);
+                $stmt -> bindParam(':PID', $_POST['PID']);
+                $stmt->execute();
+                ob_end_flush();
+                echo "<script>alert('已加入我的願望清單');</script>";
+                echo '<script>window.location.href="product2-2.php";</script>';
+            }
+        }
+    ?>
 
-  <style>
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-        font-family: Arial, sans-serif;
-        color: #333;
-        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-        background-color: #ffffff;
-        border: 1px solid #ddd; /* 添加表格整体边框 */
-    }
-
-    /* 表格標頭 */
-    th {
-        background-color: #f2f2f2;
-        color: #333;
-        font-weight: bold;
-        padding: 12px 15px;
-        text-align: center;
-        border: 1px solid #ddd; /* 添加表头单元格边框 */
-    }
-
-    /* 表格行与单元格 */
-    tr {
-        border-bottom: 1px solid #ddd;
-    }
-
-    td {
-        padding: 12px 15px;
-        text-align: center;
-        border: 1px solid #ddd; /* 添加单元格边框 */
-    }
-
-    /* 滑过行变色效果 */
-    tr:hover {
-        background-color: #f5f5f5;
-    }
-  </style>
   </head>
-  <body>
-   
+  <!-- !Important notice -->
+  <!-- Only for product page body tag have to added .productPage class -->
+  <body class="productPage">  
    <!-- wpf loader Two -->
     <div id="wpf-loader-two">          
       <div class="wpf-loader-two-inner">
@@ -242,7 +254,7 @@
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
                 <!-- img based logo -->
-                <!-- <a href="index.php"><img src="img/logo.jpg" alt="logo img"></a> -->
+                <!-- <a href="index.html"><img src="img/logo.jpg" alt="logo img"></a> -->
               </div>
               <!-- / logo  -->
                <!-- cart box -->
@@ -272,9 +284,12 @@
             $stmt->bindParam(':ID', $_SESSION['ID']);
             $stmt->execute();
 
+            $total=0;
             $displayed_count = 0; // 初始化已顯示計數器
 
             while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
+              $subtotal = $clothes['price'] * $clothes['quantity']; 
+                $total += $subtotal;
                 if ($displayed_count < 3) {
                     echo "<li>";
                     echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
@@ -292,7 +307,6 @@
             }
             ?>
         </ul>
-
         <ul>
           <li>
     <span class="aa-cartbox-total-title">
@@ -369,8 +383,10 @@
                 </ul>
               </li>
               <li><a href="product4.php">Coat</a></li>            
+
             </ul>
-          </div><!--/.nav-collapse -->
+          </div>
+          <!--/.nav-collapse -->
         </div>
       </div> 
       </div>
@@ -384,10 +400,11 @@
    <div class="aa-catg-head-banner-area">
      <div class="container">
       <div class="aa-catg-head-banner-content">
-        <h2>Cart Page</h2>
+        <h2>Fashion</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>                   
-          <li class="active">Cart</li>
+          <li><a href="organ.php">Home</a></li>
+          <li><a href="product2.php">Long Sleeve Top</a></li>          
+          <li class="active">T-shirts</li>
         </ol>
       </div>
      </div>
@@ -395,26 +412,90 @@
   </section>
   <!-- / catg header banner section -->
 
- <!-- Cart view section -->
- <section id="cart-view">
-   <div class="container">
-     <div class="row">
-       <div class="col-md-12">
-         <div class="cart-view-area">
-           <div class="cart-view-table">
-              <div><?php echo $html;?></div>
-             
-           </div>
-         </div>
-       </div>
-     </div>
-   </div>
- </section>
- <!-- / Cart view section -->
+  <!-- product category -->
+  <section id="aa-product-category">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-9 col-md-9 col-sm-8 col-md-push-3">
+          <div class="aa-product-catg-content">
+            <div class="aa-product-catg-head">
+              <div class="aa-product-catg-head-left">
+                <form action="" class="aa-sort-form">
+                  <label for="">Sort by</label>
+                  <select name="">
+                    <option value="1" selected="Default">Default</option>
+                    <option value="2">Price: High to Low</option>
+                    <option value="3">Price: Low to High</option>
+                  </select>
+                </form>
+                <form action="" class="aa-show-form">
+                  <label for="">Show</label>
+                  <select name="">
+                    <option value="1" selected="12">9</option>
+                    <option value="2">12</option>
+                  </select>
+                </form>
+              </div>
+              <div class="aa-product-catg-head-right">
+                <a id="grid-catg" href="#"><span class="fa fa-th"></span></a>
+                <a id="list-catg" href="#"><span class="fa fa-list"></span></a>
+              </div>
+            </div>
+            <div class="aa-product-catg-body">
+    <ul class="aa-product-catg">
+        <?php echo $html;?>
+    </ul> 
+</div>
+
+<div class="aa-product-catg-pagination">
+    <?php echo $pagination_html; ?>
+</div>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-3 col-sm-3 col-md-pull-9">
+          <aside class="aa-sidebar">
+            <!-- single sidebar -->
+            <div class="aa-sidebar-widget">
+            <style>
+              .aa-sidebar-widget ul.navbar-nav li a {
+              font-size: 17px;
+              }
+            </style>
+              <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Category</h3>
+              <ul class="nav navbar-nav">
+              <li><a href="productall.php">ALL </a>
+                </li>
+                <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
+                <ul class="dropdown-menu">                
+                  <li><a href="product1-1.php">Shirts</a></li>
+                  <li><a href="product1-2.php">T-Shirts</a></li>
+                </ul>
+                </li>
+                <li><a href="product2.php">Long Sleeve Top <span class="caret"></span></a>
+                  <ul class="dropdown-menu">                
+                    <li><a href="product2-1.php">Shirts</a></li>
+                    <li><a href="product2-2.php">T-Shirts</a></li>
+                  </ul>
+                </li>
+                <li><a href="product3.php">Pants <span class="caret"></span></a>
+                  <ul class="dropdown-menu">                
+                    <li><a href="product3-1.php">Shorts</a></li>
+                    <li><a href="product3-2.php">Trousers</a></li>
+                  </ul>
+                </li>
+                <li><a href="product4.php">Coat</a></li>
+              </ul>
+            </div>  
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- / product category -->
 
 
   <!-- Subscribe section -->
-
+ 
   <!-- / Subscribe section -->
 
   <!-- footer -->  
@@ -500,29 +581,53 @@
   </footer>
   <!-- / footer -->
   <!-- Login Modal -->  
+  <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">                      
+        <div class="modal-body">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4>Login or Register</h4>
+          <form class="aa-login-form" action="">
+            <label for="">Username or Email address<span>*</span></label>
+            <input type="text" placeholder="Username or email">
+            <label for="">Password<span>*</span></label>
+            <input type="password" placeholder="Password">
+            <button class="aa-browse-btn" type="submit">Login</button>
+            <label for="rememberme" class="rememberme"><input type="checkbox" id="rememberme"> Remember me </label>
+            <p class="aa-lost-password"><a href="#">Lost your password?</a></p>
+            <div class="aa-register-now">
+              Don't have an account?<a href="register.php">Register now!</a>
+            </div>
+          </form>
+        </div>                        
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div>
 
 
     
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="js/bootstrap.js"></script>  
-    <!-- SmartMenus jQuery plugin -->
-    <script type="text/javascript" src="js/jquery.smartmenus.js"></script>
-    <!-- SmartMenus jQuery Bootstrap Addon -->
-    <script type="text/javascript" src="js/jquery.smartmenus.bootstrap.js"></script>  
-    <!-- To Slider JS -->
-    <script src="js/sequence.js"></script>
-    <script src="js/sequence-theme.modern-slide-in.js"></script>  
-    <!-- Product view slider -->
-    <script type="text/javascript" src="js/jquery.simpleGallery.js"></script>
-    <script type="text/javascript" src="js/jquery.simpleLens.js"></script>
-    <!-- slick slider -->
-    <script type="text/javascript" src="js/slick.js"></script>
-    <!-- Price picker slider -->
-    <script type="text/javascript" src="js/nouislider.js"></script>
-    <!-- Custom js -->
-    <script src="js/custom.js"></script> 
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="js/bootstrap.js"></script>  
+  <!-- SmartMenus jQuery plugin -->
+  <script type="text/javascript" src="js/jquery.smartmenus.js"></script>
+  <!-- SmartMenus jQuery Bootstrap Addon -->
+  <script type="text/javascript" src="js/jquery.smartmenus.bootstrap.js"></script>  
+  <!-- To Slider JS -->
+  <script src="js/sequence.js"></script>
+  <script src="js/sequence-theme.modern-slide-in.js"></script>  
+  <!-- Product view slider -->
+  <script type="text/javascript" src="js/jquery.simpleGallery.js"></script>
+  <script type="text/javascript" src="js/jquery.simpleLens.js"></script>
+  <!-- slick slider -->
+  <script type="text/javascript" src="js/slick.js"></script>
+  <!-- Price picker slider -->
+  <script type="text/javascript" src="js/nouislider.js"></script>
+  <!-- Custom js -->
+  <script src="js/custom.js"></script> 
+  
 
   </body>
 </html>

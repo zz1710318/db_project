@@ -41,7 +41,8 @@
 		<?php
     session_start();
 
-    if (!isset($_SESSION['account'])) {
+    if (!isset($_SESSION['account'])) 
+    {
         echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
         exit(); 
     }
@@ -245,6 +246,7 @@
                   <li class="hidden-xs"><a href="wishlist.php">Wishlist</a></li>
                   <li class="hidden-xs"><a href="cart.php">My Cart</a></li>
                   <li class="hidden-xs"><a href="checkout.php">Checkout</a></li>
+                  <li class="hidden-xs"><a href="order.php">My Order</a></li>
                 </ul>
               </div>
             </div>

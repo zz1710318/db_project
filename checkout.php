@@ -38,9 +38,113 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <?php
-      session_start();
-      require_once 'db.php';
-    ?>
+session_start();
+
+// 處理越權查看以及錯誤登入
+if (!isset($_SESSION['account'])) {
+  echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
+  exit();
+} 
+
+// 處理管理員調出使用者清單
+include "db.php";
+
+$html = "";
+$total = 0;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Retrieve form data
+  $recipient = isset($_POST['recipient']) ? $_POST['recipient'] : '';
+  $address = isset($_POST['address']) ? $_POST['address'] : '';
+  
+  // Validate form data
+  if (empty($recipient) || empty($address)) {
+      echo "<script>alert('請填寫所有欄位');</script>";
+  } else {
+      // Calculate total pay amount
+      $sql = "SELECT SUM(t1.price * t2.quantity) AS total FROM product t1
+              JOIN cart t2 ON t1.PID = t2.PID
+              WHERE t2.ID = :ID";
+      $stmtTotal = $link->prepare($sql);
+      $stmtTotal->bindParam(':ID', $_SESSION['ID']);
+      $stmtTotal->execute();
+      $totalRow = $stmtTotal->fetch(PDO::FETCH_ASSOC);
+      $total = $totalRow['total'];
+
+      if ($total == 0) {
+          echo "<script>alert('請選取商品');</script>";
+      } else {
+          // Begin transaction
+          $link->beginTransaction();
+
+          try {
+              // Insert into orders table
+              $sql = "INSERT INTO `orders` (`recipient`, `ID`, `address`, `method`, `payamount`, `date`) VALUES (:recipient, :ID, :address, :method, :payamount, :date)";
+              $stmta = $link->prepare($sql);
+              $stmta->bindParam(':recipient', $recipient);
+              $stmta->bindParam(':ID', $_SESSION['ID']);
+              $stmta->bindParam(':address', $address);
+              $stmta->bindParam(':method', $_POST['method']);
+              $stmta->bindParam(':payamount', $total);
+              $date = date('Y-m-d H:i:s');
+              $stmta->bindParam(':date', $date);
+              $stmta->execute();
+
+              // Retrieve the last inserted order ID
+              $orderID = $link->lastInsertId();
+
+              // Insert into orderDetail table
+              $sql = "INSERT INTO `orderDetail` (`OID`, `PID`, `ID`, `quantity`) SELECT :orderID, `PID`, `ID`, `quantity` FROM `cart` WHERE `ID` = :ID";
+              $stmtd = $link->prepare($sql);
+              $stmtd->bindParam(':orderID', $orderID);
+              $stmtd->bindParam(':ID', $_SESSION['ID']);
+              $stmtd->execute();
+
+              // Commit transaction
+              $link->commit();
+
+              // Clear cart for the current user
+              $sql = "DELETE FROM cart WHERE ID = :ID";
+              $stmtClearCart = $link->prepare($sql);
+              $stmtClearCart->bindParam(':ID', $_SESSION['ID']);
+              $stmtClearCart->execute();
+
+              echo "<script>alert('已送出訂單');</script>";
+          } catch(PDOException $e) {
+              // Rollback transaction on error
+              $link->rollback();
+              echo "<script>alert('送出訂單失敗: " . $e->getMessage() . "');</script>";
+          }
+      }
+  }
+}
+
+$sql = "SELECT * FROM product t1
+                JOIN cart t2 ON t1.PID = t2.PID
+                WHERE t2.ID = :ID";
+        $stmt = $link->prepare($sql);
+        $stmt -> bindParam(':ID', $_SESSION['ID']);
+        $stmt->execute();
+        $total = 0;
+        
+        $html ="<tbody>";
+        while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+        {
+            $html .= "<tr>";
+            $html .= "<td>" . htmlspecialchars($clothes['quantity']) ." x ". htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name'])."</td>";
+            $subtotal = $clothes['price'] * $clothes['quantity'];
+            $html .= "<td>$" . $subtotal . "</td>"; 
+            $total += $subtotal;
+            $html .= "</tr>";
+        }
+        $html .= "</tbody>";
+        $html .= '<tfoot>                        
+            <tr>
+              <th>Total</th>
+              <td>$' . $total . '</td>
+            </tr>
+          </tfoot>';
+?>
 
   </head>
   <body>  
@@ -101,6 +205,7 @@
                   <li class="hidden-xs"><a href="wishlist.php">Wishlist</a></li>
                   <li class="hidden-xs"><a href="cart.php">My Cart</a></li>
                   <li class="hidden-xs"><a href="checkout.php">Checkout</a></li>
+                  <li class="hidden-xs"><a href="order.php">My Order</a></li>
                 </ul>
               </div>
             </div>
@@ -128,48 +233,80 @@
               </div>
               <!-- / logo  -->
                <!-- cart box -->
-              <div class="aa-cartbox">
-                <a class="aa-cart-link" href="#">
-                  <span class="fa fa-shopping-basket"></span>
-                  <span class="aa-cart-title">SHOPPING CART</span>
-                  <span class="aa-cart-notify">2</span>
-                </a>
-                <div class="aa-cartbox-summary">
-                  <ul>
-                    <li>
-                      <a class="aa-cartbox-img" href="#"><img src="img/woman-small-2.jpg" alt="img"></a>
-                      <div class="aa-cartbox-info">
-                        <h4><a href="#">Product Name</a></h4>
-                        <p>1 x $250</p>
-                      </div>
-                      <a class="aa-remove-product" href="#"><span class="fa fa-times"></span></a>
-                    </li>
-                    <li>
-                      <a class="aa-cartbox-img" href="#"><img src="img/woman-small-1.jpg" alt="img"></a>
-                      <div class="aa-cartbox-info">
-                        <h4><a href="#">Product Name</a></h4>
-                        <p>1 x $250</p>
-                      </div>
-                      <a class="aa-remove-product" href="#"><span class="fa fa-times"></span></a>
-                    </li>                    
-                    <li>
-                      <span class="aa-cartbox-total-title">
-                        Total
-                      </span>
-                      <span class="aa-cartbox-total-price">
-                        $500
-                      </span>
-                    </li>
-                  </ul>
-                  <a class="aa-cartbox-checkout aa-primary-btn" href="checkout.php">Checkout</a>
-                </div>
-              </div>
+               <div class="aa-cartbox">
+    <a class="aa-cart-link" href="#">
+        <span class="fa fa-shopping-basket"></span>
+        <span class="aa-cart-title">SHOPPING CART</span>
+        <?php
+        $sql = "SELECT COUNT(*) as total FROM product t1
+                  JOIN cart t2 ON t1.PID = t2.PID
+                  WHERE t2.ID = :ID";
+        $stmt = $link->prepare($sql);
+        $stmt->bindParam(':ID', $_SESSION['ID']);
+        $stmt->execute();
+        $count = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        ?>
+        <span class="aa-cart-notify"><?php echo $count; ?></span>
+    </a>
+
+    <div class='aa-cartbox-summary'>
+        <ul>
+            <?php
+            $sql = "SELECT * FROM product t1
+                    JOIN cart t2 ON t1.PID = t2.PID
+                    WHERE t2.ID = :ID";
+            $stmt = $link->prepare($sql);
+            $stmt->bindParam(':ID', $_SESSION['ID']);
+            $stmt->execute();
+
+            $displayed_count = 0; // 初始化已顯示計數器
+
+            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                if ($displayed_count < 3) {
+                    echo "<li>";
+                    echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
+                    echo "<div class='aa-cartbox-info'>";
+                    echo "<h4><a>" . htmlspecialchars($clothes['type']) . "</a></h4>";
+                    echo "<h4><a>" . htmlspecialchars($clothes['name']) . "</a></h4>";
+                    echo "<p>" . htmlspecialchars($clothes['quantity']) ." x $". htmlspecialchars($clothes['price']) . "</p>";
+
+                    echo "</div></li>";
+
+                    $displayed_count++; // 每顯示一個商品，計數器加1
+                } else {
+                    // 如果已顯示計數器超過3，則跳出迴圈
+                    break;
+                }
+            }
+            ?>
+        </ul>
+        <ul>
+          <li>
+    <span class="aa-cartbox-total-title">
+        Total
+    </span>
+    <span class="aa-cartbox-total-price">
+        <?php echo '$' . $total; ?>
+    </span>
+          </li>
+          </ul>
+        <?php
+        // 計算剩餘未顯示商品數量
+        $remaining_count = $count - $displayed_count;
+        if ($remaining_count > 0) 
+        {
+          echo "<a style='color: #ff6666;'>$remaining_count items not shown.</a>";
+        }
+        ?>
+        <a class='aa-cartbox-checkout aa-primary-btn' href='cart.php'>Check Cart</a>
+    </div>
+</div>
               <!-- / cart box -->
               <!-- search box -->
               <div class="aa-search-box">
-                <form action="">
-                  <input type="text" name="" id="" placeholder="Search here ex. 'man' ">
-                  <button type="submit"><span class="fa fa-search"></span></button>
+                <form action="productall.php" method="GET">
+                  <input type="text" name="search" placeholder="Search here ex. 'T-shirts'">
+                    <button type="submit"><span class="fa fa-search"></span></button>
                 </form>
               </div>
               <!-- / search box -->             
@@ -198,33 +335,28 @@
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php">Home</a></li>
-              <li><a href="product.php">Short Sleeves <span class="caret"></span></a>
+              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="productall.php">ALL</a></li> 
+              <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shirts</a></li>
-                  <li><a href="product.php">T-Shirts</a></li>
-                  <li><a href="product.php">Vests</a></li>
+                  <li><a href="product1-1.php">Shirts</a></li>
+                  <li><a href="product1-2.php">T-Shirts</a></li>
                 </ul>
               </li>
-              <li><a href="product.php">Long Sleeve Top <span class="caret"></span></a>
+              <li><a href="product2.php">Long Sleeve Top <span class="caret"></span></a>
                 <ul class="dropdown-menu">  
-                  <li><a href="product.php">Shirts</a></li>                                                                
-                  <li><a href="product.php">T-Shirts</a></li>              
+                  <li><a href="product2-1.php">Shirts</a></li>                                                                
+                  <li><a href="product2-2.php">T-Shirts</a></li>              
                 </ul>
               </li>
-              <li><a href="product.php">Pants <span class="caret"></span></a>
+              <li><a href="product3.php">Pants <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shorts</a></li>
-                  <li><a href="product.php">Trousers</a></li>
+                  <li><a href="product3-1.php">Shorts</a></li>
+                  <li><a href="product3-2.php">Trousers</a></li>
                 </ul>
               </li>
-              <li><a href="product.php">Coat</a></li>            
-              <li><a href="product.php">Pages <span class="caret"></span></a>
-                <ul class="dropdown-menu">                
-                  <li><a href="product.php">Shop Page</a></li>
-                  <li><a href="product-detail.php">Shop Single</a></li>                              
-                </ul>
-              </li>
+              <li><a href="product4.php">Coat</a></li>            
+
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -257,149 +389,11 @@
      <div class="row">
        <div class="col-md-12">
         <div class="checkout-area">
-          <form action="">
+          <form action="checkout.php" method="POST">
             <div class="row">
               <div class="col-md-8">
                 <div class="checkout-left">
                   <div class="panel-group" id="accordion">
-                    <!-- Coupon section -->
-                    <div class="panel panel-default aa-checkout-coupon">
-                      <div class="panel-heading">
-                        <h4 class="panel-title">
-                          <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                            Have a Coupon?
-                          </a>
-                        </h4>
-                      </div>
-                      <div id="collapseOne" class="panel-collapse collapse in">
-                        <div class="panel-body">
-                          <input type="text" placeholder="Coupon Code" class="aa-coupon-code">
-                          <input type="submit" value="Apply Coupon" class="aa-browse-btn">
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Login section -->
-                    <div class="panel panel-default aa-checkout-login">
-                      <div class="panel-heading">
-                        <h4 class="panel-title">
-                          <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-                            Client Login 
-                          </a>
-                        </h4>
-                      </div>
-                      <div id="collapseTwo" class="panel-collapse collapse">
-                        <div class="panel-body">
-                          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quaerat voluptatibus modi pariatur qui reprehenderit asperiores fugiat deleniti praesentium enim incidunt.</p>
-                          <input type="text" placeholder="Username or email">
-                          <input type="password" placeholder="Password">
-                          <button type="submit" class="aa-browse-btn">Login</button>
-                          <label for="rememberme"><input type="checkbox" id="rememberme"> Remember me </label>
-                          <p class="aa-lost-password"><a href="#">Lost your password?</a></p>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Billing Details -->
-                    <div class="panel panel-default aa-checkout-billaddress">
-                      <div class="panel-heading">
-                        <h4 class="panel-title">
-                          <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-                            Billing Details
-                          </a>
-                        </h4>
-                      </div>
-                      <div id="collapseThree" class="panel-collapse collapse">
-                        <div class="panel-body">
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="First Name*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Last Name*">
-                              </div>
-                            </div>
-                          </div> 
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Company name">
-                              </div>                             
-                            </div>                            
-                          </div>  
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="email" placeholder="Email Address*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="tel" placeholder="Phone*">
-                              </div>
-                            </div>
-                          </div> 
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <textarea cols="8" rows="3">Address*</textarea>
-                              </div>                             
-                            </div>                            
-                          </div>   
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <select>
-                                  <option value="0">Select Your Country</option>
-                                  <option value="1">Australia</option>
-                                  <option value="2">Afganistan</option>
-                                  <option value="3">Bangladesh</option>
-                                  <option value="4">Belgium</option>
-                                  <option value="5">Brazil</option>
-                                  <option value="6">Canada</option>
-                                  <option value="7">China</option>
-                                  <option value="8">Denmark</option>
-                                  <option value="9">Egypt</option>
-                                  <option value="10">India</option>
-                                  <option value="11">Iran</option>
-                                  <option value="12">Israel</option>
-                                  <option value="13">Mexico</option>
-                                  <option value="14">UAE</option>
-                                  <option value="15">UK</option>
-                                  <option value="16">USA</option>
-                                </select>
-                              </div>                             
-                            </div>                            
-                          </div>
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Appartment, Suite etc.">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="City / Town*">
-                              </div>
-                            </div>
-                          </div>   
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="District*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Postcode / ZIP*">
-                              </div>
-                            </div>
-                          </div>                                    
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Shipping Address -->
                     <div class="panel panel-default aa-checkout-billaddress">
                       <div class="panel-heading">
                         <h4 class="panel-title">
@@ -411,99 +405,19 @@
                       <div id="collapseFour" class="panel-collapse collapse">
                         <div class="panel-body">
                          <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                               <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="First Name*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Last Name*">
+                                <input type="text" name="recipient" placeholder="Name*">
                               </div>
                             </div>
-                          </div> 
+                          </div>                     
                           <div class="row">
                             <div class="col-md-12">
                               <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Company name">
+                                <input type="text" name="address" placeholder="Address*">
                               </div>                             
                             </div>                            
-                          </div>  
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="email" placeholder="Email Address*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="tel" placeholder="Phone*">
-                              </div>
-                            </div>
-                          </div> 
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <textarea cols="8" rows="3">Address*</textarea>
-                              </div>                             
-                            </div>                            
-                          </div>   
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <select>
-                                  <option value="0">Select Your Country</option>
-                                  <option value="1">Australia</option>
-                                  <option value="2">Afganistan</option>
-                                  <option value="3">Bangladesh</option>
-                                  <option value="4">Belgium</option>
-                                  <option value="5">Brazil</option>
-                                  <option value="6">Canada</option>
-                                  <option value="7">China</option>
-                                  <option value="8">Denmark</option>
-                                  <option value="9">Egypt</option>
-                                  <option value="10">India</option>
-                                  <option value="11">Iran</option>
-                                  <option value="12">Israel</option>
-                                  <option value="13">Mexico</option>
-                                  <option value="14">UAE</option>
-                                  <option value="15">UK</option>
-                                  <option value="16">USA</option>
-                                </select>
-                              </div>                             
-                            </div>                            
-                          </div>
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Appartment, Suite etc.">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="City / Town*">
-                              </div>
-                            </div>
-                          </div>   
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="District*">
-                              </div>                             
-                            </div>
-                            <div class="col-md-6">
-                              <div class="aa-checkout-single-bill">
-                                <input type="text" placeholder="Postcode / ZIP*">
-                              </div>
-                            </div>
-                          </div> 
-                           <div class="row">
-                            <div class="col-md-12">
-                              <div class="aa-checkout-single-bill">
-                                <textarea cols="8" rows="3">Special Notes</textarea>
-                              </div>                             
-                            </div>                            
-                          </div>              
+                          </div>                  
                         </div>
                       </div>
                     </div>
@@ -521,43 +435,15 @@
                           <th>Total</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        <tr>
-                          <td>T-Shirt <strong> x  1</strong></td>
-                          <td>$150</td>
-                        </tr>
-                        <tr>
-                          <td>Polo T-Shirt <strong> x  1</strong></td>
-                          <td>$250</td>
-                        </tr>
-                        <tr>
-                          <td>Shoes <strong> x  1</strong></td>
-                          <td>$350</td>
-                        </tr>
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <th>Subtotal</th>
-                          <td>$750</td>
-                        </tr>
-                         <tr>
-                          <th>Tax</th>
-                          <td>$35</td>
-                        </tr>
-                         <tr>
-                          <th>Total</th>
-                          <td>$785</td>
-                        </tr>
-                      </tfoot>
+                        <?php echo $html;?>
                     </table>
                   </div>
                   <h4>Payment Method</h4>
                   <div class="aa-payment-method">                    
-                    <label for="cashdelivery"><input type="radio" id="cashdelivery" name="optionsRadios"> Cash on Delivery </label>
-                    <label for="paypal"><input type="radio" id="paypal" name="optionsRadios" checked> Via Paypal </label>
-                    <img src="https://www.paypalobjects.com/webstatic/mktg/logo/AM_mc_vs_dc_ae.jpg" border="0" alt="PayPal Acceptance Mark">    
-                    <input type="submit" value="Place Order" class="aa-browse-btn">                
-                  </div>
+    <label for="CashOnDelivery"><input type="radio" id="CashOnDelivery" value="Cash on Delivery" name="method" checked> Cash on Delivery </label>
+    <label for="CreditCardPayment"><input type="radio" id="CreditCardPayment" value="Credit card payment" name="method"> Credit card payment </label>
+    <input type="submit" value="Place Order" class="aa-browse-btn">                
+</div>
                 </div>
               </div>
             </div>

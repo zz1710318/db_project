@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">    
-    <title>DE Shop | Account Page</title>
+    <title>DE Shop | Upadte Page</title>
     
     <!-- Font awesome -->
     <link href="css/font-awesome.css" rel="stylesheet">
@@ -39,79 +39,128 @@
     <![endif]-->
 
 		<?php
-        session_start();
 
-        // 處理越權查看以及錯誤登入
-        if (!isset($_SESSION['account'])) {
-            echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
-            exit();
-        } else if ($_SESSION['role'] != "admin") {
-            echo "<script>alert('無權訪問'); window.location.href = 'logout.php';</script>";
-            exit();
-        }
-        
-        // 處理管理員調出使用者清單
+    session_start();
+
+    if (!isset($_SESSION['account'])) 
+    {
+      echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
+      exit();
+    } 
+    else if ($_SESSION['role'] != "admin") 
+    {
+      echo "<script>alert('無權訪問'); window.location.href = 'logout.php';</script>";
+      exit();
+    }
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
         include "db.php";
-        $stmt = $link->prepare("SELECT * FROM `members`");
-        $stmt->execute();
         
-        $html = "<table><tr><th>ID</th><th>Role</th><th>Account</th></tr>";
-        while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $html .= "<tr>";
-            $html .= "<td>" . htmlspecialchars($user['ID']) . "</td>";
-            $html .= "<td>" . htmlspecialchars($user['role']) . "</td>";
-            $html .= "<td>" . htmlspecialchars($user['account']) . "</td>";
-            $html .= "<td><form action=\"manageAccounts.php\" method=\"post\" onsubmit=\"return confirmDelete();\">". ((($user['role'] === "admin")||($user['role'] === "root")) ? "" : "<input type=\"hidden\" name=\"deleteID\" value=\"".$user['ID']."\"><button type=\"submit\" style=\"background-color: #ff4d4d; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: background 0.3s ease;\">Delete User</button></form></td>");
-            $html .= "</tr>";
+        $type = $_POST['type'];
+        $name = $_POST['name'];
+        $price = $_POST['price'];
+        $image = $_FILES['image'];
+        
+        if (empty($name) || empty($price) || $type == "" || $image['error'] !== UPLOAD_ERR_OK) 
+        {
+            echo "<script>alert('請填寫所有欄位並選擇一個圖片');</script>";
+        } 
+        else 
+        {
+            $check = getimagesize($image["tmp_name"]);
+            if ($check !== false) {
+                $imageContent = file_get_contents($image["tmp_name"]); 
+
+                if ($imageContent !== false) 
+                {
+                    $sql = "INSERT INTO product (name, ID, price, type, image) VALUES (?, ?, ?, ?, ?)";
+                    $stmt = $link->prepare($sql);
+                    $stmt->bindParam(1, $name);
+                    $stmt->bindParam(2, $_SESSION['ID']);
+                    $stmt->bindParam(3, $price);
+                    $stmt->bindParam(4, $type);
+                    $stmt->bindParam(5, $imageContent, PDO::PARAM_LOB);
+
+                    if ($stmt->execute()) 
+                    {
+                        echo "<script>alert('產品已成功上傳');</script>";
+                    } 
+                    else 
+                    {
+                        echo "<script>alert('產品上傳失敗：" . $stmt->errorInfo()[2] . "');</script>";
+                    }
+                } 
+                else 
+                {
+                    echo "<script>alert('圖片讀取失敗');</script>";
+                }
+            } 
+            else 
+            {
+                echo "<script>alert('所上傳文件非有效的圖片');</script>";
+            }
         }
-        $html .= "</table>";
+        // $db->close();
+    }
     ?>
-    <?php
-        if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deleteID']))){
-            include "db.php";
-            $deleteUserID = $_POST['deleteID'];
-            $stmt = $link -> prepare("DELETE FROM `members` WHERE ID = :deleteID");
-            $stmt->bindParam(':deleteID', $deleteUserID);
-            $stmt->execute();
-            header("location: manageAccounts.php");
-        }
-    ?>
-    <style>
-        table {
-            width: 100%;        /* 表格寬度佔滿父元素 */
-            border-collapse: collapse; /* 邊框合併為單一邊框 */
-            margin: 20px 0;     /* 上下邊距為 20px，左右為 0 */
-            font-family: Arial, sans-serif; /* 使用 Arial 或無襯線字體 */
-            color: #333;        /* 字體顏色 */
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); /* 輕微陰影效果 */
-            background-color: #ffffff; /* 白色背景 */
-        }
+  <style>
+    form {
+        background-color: white; /* 表單背景設為白色 */
+        padding: 20px;
+        border-radius: 8px; /* 圓角邊框 */
+        box-shadow: 0 0 10px rgba(0,0,0,0.1); /* 輕微陰影效果 */
+        width: 80%; /* 表單寬度 */
+        max-width: 500px; /* 最大寬度為500px */
+        margin: 0 auto; /* 水平置中 */
+    }
 
-        /* 表格標頭 */
-        th {
-            background-color: #f2f2f2; /* 標頭背景顏色 */
-            color: #333;        /* 標頭文字顏色 */
-            font-weight: bold;  /* 粗體文字 */
-            padding: 12px 15px; /* 內距 */
-            text-align: center;   /* 文字對齊 */
-        }
+    h1 {
+        color: #333; /* 深灰色標題 */
+        text-align: center; /* 標題文字置中 */
+    }
 
-        /* 表格行與單元格 */
-        tr {
-            border-bottom: 1px solid #ddd; /* 行底部邊框 */
-        }
+    label {
+        margin-top: 10px; /* 每個標籤上方留白 */
+        display: block; /* 確保每個元素佔滿一整行 */
+        color: #666; /* 文字顏色 */
+        font-size: 16px; /* 字體大小 */
+    }
 
-        td {
-            padding: 12px 15px; /* 單元格內距 */
-            text-align: center;   /* 文字對齊 */
-        }
+    input[type="text"],
+    textarea,
+    input[type="file"] {
+        width: calc(100% - 22px); /* 輸入框寬度為容器寬度減去邊框 */
+        padding: 10px; /* 內邊距 */
+        margin-top: 5px; /* 上邊距 */
+        border: 1px solid #ddd; /* 邊框顏色 */
+        border-radius: 4px; /* 圓角邊框 */
+    }
 
-        /* 滑過行變色效果 */
-        tr:hover {
-            background-color: #f5f5f5; /* 滑過時的背景顏色 */
-        }
+    textarea {
+        height: 100px; /* 文本域高度 */
+        resize: vertical; /* 允許垂直調整大小 */
+    }
 
-    </style>
+    input[type="submit"] {
+        background-color: #ff6666; /* 提交按鈕背景色 */
+        color: white; /* 文字顏色 */
+        padding: 10px 20px; /* 內邊距 */
+        border: none; /* 無邊框 */
+        border-radius: 4px; /* 圓角邊框 */
+        cursor: pointer; /* 滑鼠指針變為手型 */
+        display: block; /* 確保占滿整行 */
+        width: 100%; /* 寬度 */
+        margin-top: 20px; /* 上邊距 */
+    }
+
+    input[type="submit"]:hover {
+        background-color: #8b0000; /* 鼠標懸停時的背景色 */
+
+    
+    }
+</style>
+
+
   </head>
   <body>
   
@@ -167,7 +216,6 @@
               <!-- / header top left -->
               <div class="aa-header-top-right">
                 <ul class="aa-head-top-nav-right">
-
                   <li><a href="myaccount-admin.php" class="nav-item nav-link active"><?php echo "Welcome，". $_SESSION['account'];?></a></li>
                   <li><a href="logout.php" class="btn btn-danger rounded-0 py-4 px-lg-5 d-none d-lg-block" style="background-color: #ff6666; color: white;">Logout<i class="fa fa-arrow-right ms-3"></i></a></li>
                   <li class="hidden-xs"><a href="upload.php">Upload</a></li>
@@ -195,16 +243,7 @@
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
-                <!-- img based logo -->
-                <!-- <a href="index.html"><img src="img/logo.jpg" alt="logo img"></a> -->
-              </div>
-              <!-- / logo  -->
-               <!-- cart box -->
-              
-              <!-- / cart box -->
-              <!-- search box -->
-              
-              <!-- / search box -->             
+              </div>           
             </div>
           </div>
         </div>
@@ -213,22 +252,52 @@
     <!-- / header bottom  -->
   </header>
   <!-- / header section -->
- 
- 
-  <!-- catg header banner section -->
   <section id="aa-catg-head-banner">
     <img src="img/fashion/clothes.jpg" alt="fashion img">
     <div class="aa-catg-head-banner-area">
      <div class="container">
       <div class="aa-catg-head-banner-content">
-        <h2>ManageAccount Page</h2>
+        <h2>Upload Page</h2>
+        <ol class="breadcrumb">
+          <li><a href="manageAccounts.php">Home</a></li>         
+          <li class="active">Upload</li>
+        </ol>
       </div>
      </div>
    </div>
   </section>
-  <div class="container">
-  <div class="bg-light rounded h-100 d-flex align-items-center p-5"><?php echo $html;?></div>
-  </div>
+ 
+  <!-- catg header banner section -->
+  
+
+ <section id="cart-view" style="margin-top: 20px; margin-bottom: 20px;">
+   <div class="container">
+        <form action="upload.php" method="POST" enctype="multipart/form-data">
+            <h3>Upload product</h3>
+            <label for="name">Enter name:</label>
+            <input type="text" name="name" id="name" required><br><br>
+
+            <label for="price">Set price:</label>
+            <input type="text" name="price" id="price" required><br><br>
+
+            <label for="price">Type:</label>
+            <select name="type" class="form-control border-0" >
+                <option value="" selected>Please choose</option>
+                <option value="Short Sleeves">Short Sleeves</option>
+                <option value="Long Sleeve Top">Long Sleeve Top</option>
+                <option value="Pants">Pants</option>
+                <option value="Coat">Coat</option>
+            </select>
+
+            <label for="image">Upload image:</label>
+            <input type="file" name="image" id="image" required><br><br>
+
+            <input type="submit" value="Upload product">
+        </form>
+    </div>
+  </section>
+
+ 
   <!-- / catg header banner section -->
 
  <!-- Cart view section -->
