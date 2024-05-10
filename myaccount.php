@@ -265,20 +265,13 @@
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
                 <!-- img based logo -->
-                <!-- <a href="index.html"><img src="img/logo.jpg" alt="logo img"></a> -->
               </div>
-              <!-- / logo  -->
-               <!-- cart box -->
-              
-              <!-- / cart box -->
-              <!-- search box -->
-              
-              <!-- / search box -->             
+              <!-- / logo  -->       
             </div>
           </div>
         </div>
@@ -297,7 +290,7 @@
       <div class="aa-catg-head-banner-content">
         <h2>Update Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>         
+          <li><a href="menu.php">Home</a></li>         
           <li class="active">Update</li>
         </ol>
       </div>

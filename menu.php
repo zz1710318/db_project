@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
 
     // 提示商品已加入购物车
     echo "<script>alert('商品已加入購物車');</script>";
-    echo '<script>window.location.href="organ.php";</script>';
+    echo '<script>window.location.href="menu.php";</script>';
 }
 ?>
 <?php
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
             if($checkCartExists->fetchColumn() > 0) {
                 ob_end_flush();
                 echo "<script>alert('該物品先前已加入我的願望清單');</script>";
-                echo '<script>window.location.href="organ.php";</script>';
+                echo '<script>window.location.href="menu.php";</script>';
             } else {
                 $stmt = $link->prepare("INSERT INTO `wishlist`(`ID`, `PID`) VALUES (:ID, :PID)");
                 $stmt -> bindParam(':ID', $_SESSION['ID']);
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
                 $stmt->execute();
                 ob_end_flush();
                 echo "<script>alert('已加入我的願望清單');</script>";
-                echo '<script>window.location.href="organ.php";</script>';
+                echo '<script>window.location.href="menu.php";</script>';
             }
         }
     ?>
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
@@ -293,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="menu.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
               <li><a href="productall.php">ALL</a></li>  
               <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
@@ -398,14 +398,14 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
                                 echo '<li>';
                                 echo '<figure>';
                                 echo '<a class="aa-product-img" href="#"><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="250" height="300"></a>';
-                                echo '<form action="organ.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
+                                echo '<form action="menu.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
                                 echo '<figcaption>';
                                 echo '<h4 class="aa-product-title"><a href="#">' . htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name']) . '</a></h4>';
                                 echo '<span class="aa-product-price">$' . htmlspecialchars($clothes['price']) . '</span>';
                                 echo '</figcaption>';
                                 echo '</figure>';
                                 echo '<div class="aa-product-hvr-content">';
-                                echo '<form action="organ.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
+                                echo '<form action="menu.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
                                 echo '</div>';
                                 echo '</li>';
                             }
@@ -429,14 +429,14 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
                                 echo '<li>';
                                 echo '<figure>';
                                 echo '<a class="aa-product-img" href="#"><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="250" height="300"></a>';
-                                echo '<form action="organ.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
+                                echo '<form action="menu.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
                                 echo '<figcaption>';
                                 echo '<h4 class="aa-product-title"><a href="#">' . htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name']) . '</a></h4>';
                                 echo '<span class="aa-product-price">$' . htmlspecialchars($clothes['price']) . '</span>';
                                 echo '</figcaption>';
                                 echo '</figure>';
                                 echo '<div class="aa-product-hvr-content">';
-                                echo '<form action="organ.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
+                                echo '<form action="menu.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
                                 echo '</div>';
                                 echo '</li>';
                             }
@@ -460,14 +460,14 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
                                 echo '<li>';
                                 echo '<figure>';
                                 echo '<a class="aa-product-img" href="#"><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="250" height="300"></a>';
-                                echo '<form action="organ.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
+                                echo '<form action="menu.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
                                 echo '<figcaption>';
                                 echo '<h4 class="aa-product-title"><a href="#">' . htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name']) . '</a></h4>';
                                 echo '<span class="aa-product-price">$' . htmlspecialchars($clothes['price']) . '</span>';
                                 echo '</figcaption>';
                                 echo '</figure>';
                                 echo '<div class="aa-product-hvr-content">';
-                                echo '<form action="organ.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
+                                echo '<form action="menu.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
                                 echo '</div>';
                                 echo '</li>';
                             }
@@ -489,14 +489,14 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['addToCart'])) {
                                 echo '<li>';
                                 echo '<figure>';
                                 echo '<a class="aa-product-img" href="#"><img src="data:image/jpeg;base64,'.base64_encode($clothes['image']).'" alt="Product Image" width="250" height="300"></a>';
-                                echo '<form action="organ.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
+                                echo '<form action="menu.php" method="post"><a class="aa-add-card-btn"><input type="hidden" name="addToCartPID" value="'.$clothes['PID'].'"><button type="submit" name="addToCart" value="true" style="background-color: black; color: white; border: 1px solid black;" onmouseover="this.style.color=\'#ff6666\'" onmouseout="this.style.color=\'white\'"><span class="fa fa-shopping-cart"></span>Add To Cart</button></a></form>';
                                 echo '<figcaption>';
                                 echo '<h4 class="aa-product-title"><a href="#">' . htmlspecialchars($clothes['type']) ."-". htmlspecialchars($clothes['name']) . '</a></h4>';
                                 echo '<span class="aa-product-price">$' . htmlspecialchars($clothes['price']) . '</span>';
                                 echo '</figcaption>';
                                 echo '</figure>';
                                 echo '<div class="aa-product-hvr-content">';
-                                echo '<form action="organ.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
+                                echo '<form action="menu.php" method="post" style="position: relative;"><input type="hidden" name="PID" value="'.$clothes['PID'].'"><button type="submit" class="wishlist-btn" name="addToWishlist" value="true" data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="width: 35px; height: 35px;"><a data-toggle="tooltip" data-placement="top" title="Add to Wishlist" style="position: absolute; top: 50%; left: 47.5%; transform: translate(-50%, -50%);"><span class="fa fa-heart-o"></span></a></button></form>';
                                 echo '</div>';
                                 echo '</li>';
                             }

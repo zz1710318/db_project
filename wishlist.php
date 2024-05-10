@@ -230,7 +230,7 @@
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
@@ -343,7 +343,7 @@
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="menu.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
               <li><a href="productall.php">ALL</a></li> 
               <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
@@ -382,7 +382,7 @@
       <div class="aa-catg-head-banner-content">
         <h2>Wishlist Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>                   
+          <li><a href="menu.php">Home</a></li>                   
           <li class="active">Wishlist</li>
         </ol>
       </div>

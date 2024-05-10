@@ -62,7 +62,7 @@
                 }
                 else
                 {
-                  header('Location: organ.php'); 
+                  header('Location: menu.php'); 
                 }
 
                 exit;

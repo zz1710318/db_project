@@ -51,7 +51,8 @@ include "db.php";
 
 $member_id = $_SESSION['ID'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) 
+{
     // Retrieve OID from the form submission
     $oid = $_POST['OIDDetail'];
 
@@ -65,7 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
     $stmt->execute();
 
     $html = "<table><tr><th>OID</th><th>Name</th><th>Address</th><th>Date</th><th>Amount</th><th>Method</th></tr>";
-    while ($orders = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($orders = $stmt->fetch(PDO::FETCH_ASSOC)) 
+    {
         $html .= "<tr>";
         $html .= "<td>" . htmlspecialchars($orders['OID']) ."</td>";
         $html .= "<td>" . htmlspecialchars($orders['recipient']) . "</td>";
@@ -87,7 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
     $stmt->execute();
 
     $html2 = "<table><tr><th>Image</th><th>Type</th><th>Name</th><th>Price</th><th>Quantity</th><th>Total</th></tr>";
-    while ($product = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($product = $stmt->fetch(PDO::FETCH_ASSOC)) 
+    {
         $html2 .= "<tr>";
         $html2 .= '<td><img src="data:image/jpeg;base64,'.base64_encode($product['image']).'" alt="Product Image" width="80" height="100"></td>';
         $html2 .= "<td>" . htmlspecialchars($product['type']) . "</td>";
@@ -226,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
@@ -264,10 +267,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
             $total=0;
             $displayed_count = 0; // 初始化已顯示計數器
 
-            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+            {
                 $subtotal = $clothes['price'] * $clothes['quantity']; 
                 $total += $subtotal;
-                if ($displayed_count < 3) {
+                if ($displayed_count < 3) 
+                {
                     echo "<li>";
                     echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
                     echo "<div class='aa-cartbox-info'>";
@@ -277,7 +282,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
                     echo "</div></li>";
 
                     $displayed_count++; // 每顯示一個商品，計數器加1
-                } else {
+                } 
+                else 
+                {
                     // 如果已顯示計數器超過3，則跳出迴圈
                     break;
                 }
@@ -339,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="menu.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
               <li><a href="productall.php">ALL</a></li> 
               <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
@@ -378,7 +385,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['viewdetails'])) {
       <div class="aa-catg-head-banner-content">
         <h2>Order Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>
+          <li><a href="menu.php">Home</a></li>
           <li><a href="order.php">Order</a></li>                    
           <li class="active">Order Details</li>
         </ol>

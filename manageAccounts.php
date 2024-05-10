@@ -42,10 +42,13 @@
         session_start();
 
         // 處理越權查看以及錯誤登入
-        if (!isset($_SESSION['account'])) {
+        if (!isset($_SESSION['account'])) 
+        {
             echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
             exit();
-        } else if ($_SESSION['role'] != "admin") {
+        } 
+        else if ($_SESSION['role'] != "admin") 
+        {
             echo "<script>alert('無權訪問'); window.location.href = 'logout.php';</script>";
             exit();
         }
@@ -56,7 +59,8 @@
         $stmt->execute();
         
         $html = "<table><tr><th>ID</th><th>Role</th><th>Account</th></tr>";
-        while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) 
+        {
             $html .= "<tr>";
             $html .= "<td>" . htmlspecialchars($user['ID']) . "</td>";
             $html .= "<td>" . htmlspecialchars($user['role']) . "</td>";
@@ -67,7 +71,8 @@
         $html .= "</table>";
     ?>
     <?php
-        if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deleteID']))){
+        if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deleteID'])))
+        {
             include "db.php";
             $deleteUserID = $_POST['deleteID'];
             $stmt = $link -> prepare("DELETE FROM `members` WHERE ID = :deleteID");
@@ -227,7 +232,7 @@
    </div>
   </section>
   <div class="container">
-  <div class="bg-light rounded h-100 d-flex align-items-center p-5"><?php echo $html;?></div>
+    <div class="bg-light rounded h-100 d-flex align-items-center p-5"><?php echo $html;?></div>
   </div>
   <!-- / catg header banner section -->
 

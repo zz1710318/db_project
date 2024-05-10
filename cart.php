@@ -38,24 +38,24 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <?php
-    session_start();
+      session_start();
 
-    // 處理越權查看以及錯誤登入
-    if (!isset($_SESSION['account'])) {
+    if (!isset($_SESSION['account'])) 
+    {
         echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
         exit();
     } 
     
-    // 處理管理員調出使用者清單
     include "db.php";
     
-    // 如果表单提交了，则更新购物车中的数量
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-      // 如果提交了更新购物车数量的表单
-      if (isset($_POST['update_cart'])) {
-          if (isset($_POST['quantity'])) {
-              foreach ($_POST['quantity'] as $pid => $newQuantity) {
-                  // 使用准备语句更新购物车中的数量
+    if ($_SERVER["REQUEST_METHOD"] == "POST") 
+    {
+      if (isset($_POST['update_cart'])) 
+      {
+          if (isset($_POST['quantity'])) 
+          {
+              foreach ($_POST['quantity'] as $pid => $newQuantity) 
+              {
                   $updateStmt = $link->prepare("UPDATE cart SET quantity = :quantity WHERE ID = :ID AND PID = :PID");
                   $updateStmt->bindParam(':quantity', $newQuantity);
                   $updateStmt->bindParam(':ID', $_SESSION['ID']);
@@ -64,8 +64,8 @@
               }
           }
       }
-      // 如果提交了删除物品的表单
-      elseif (isset($_POST['deletePID'])) {
+      elseif (isset($_POST['deletePID'])) 
+      {
           include "db.php";
           $deleteProductID = $_POST['deletePID'];
           $stmt = $link->prepare("DELETE FROM `cart` WHERE PID = :deletePID");
@@ -74,7 +74,7 @@
 
           echo '<script>window.location.href="cart.php";</script>';
       }
-  }
+    }
   
     
     
@@ -96,7 +96,7 @@
         $html .= "<td>" . htmlspecialchars($clothes['type']) . "</td>";
         $html .= "<td>" . htmlspecialchars($clothes['name']) . "</td>";
         $html .= "<td>$" . htmlspecialchars($clothes['price']) . "</td>";
-        $html .= "<td><input type=\"number\" name=\"quantity[{$clothes['PID']}]\" value=\"{$clothes['quantity']}\" style=\"width: 50px; height: 35px;\" min=\"1\"></td>";
+        $html .= "<td><input type=\"number\" name=\"quantity[{$clothes['PID']}]\" value=\"{$clothes['quantity']}\" style=\"width: 50px; height: 35px;\" min=\"1\" oninput=\"validity.valid||(value='');\"></td>";
         $subtotal = $clothes['price'] * $clothes['quantity'];
         $html .= "<td>$" . $subtotal . "</td>"; 
         $total += $subtotal;           
@@ -129,7 +129,7 @@
         color: #333;
         box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
         background-color: #ffffff;
-        border: 1px solid #ddd; /* 添加表格整体边框 */
+        border: 1px solid #ddd; 
     }
 
     /* 表格標頭 */
@@ -139,7 +139,7 @@
         font-weight: bold;
         padding: 12px 15px;
         text-align: center;
-        border: 1px solid #ddd; /* 添加表头单元格边框 */
+        border: 1px solid #ddd; 
     }
 
     /* 表格行与单元格 */
@@ -150,7 +150,7 @@
     td {
         padding: 12px 15px;
         text-align: center;
-        border: 1px solid #ddd; /* 添加单元格边框 */
+        border: 1px solid #ddd; 
     }
 
     /* 滑过行变色效果 */
@@ -237,12 +237,11 @@
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
                 <!-- img based logo -->
-                <!-- <a href="index.php"><img src="img/logo.jpg" alt="logo img"></a> -->
               </div>
               <!-- / logo  -->
                <!-- cart box -->
@@ -274,8 +273,10 @@
 
             $displayed_count = 0; // 初始化已顯示計數器
 
-            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                if ($displayed_count < 3) {
+            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+            {
+                if ($displayed_count < 3) 
+                {
                     echo "<li>";
                     echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
                     echo "<div class='aa-cartbox-info'>";
@@ -285,7 +286,8 @@
                     echo "</div></li>";
 
                     $displayed_count++; // 每顯示一個商品，計數器加1
-                } else {
+                } else 
+                {
                     // 如果已顯示計數器超過3，則跳出迴圈
                     break;
                 }
@@ -348,7 +350,7 @@
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="menu.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
               <li><a href="productall.php">ALL</a></li> 
               <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
@@ -386,7 +388,7 @@
       <div class="aa-catg-head-banner-content">
         <h2>Cart Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>                   
+          <li><a href="menu.php">Home</a></li>                   
           <li class="active">Cart</li>
         </ol>
       </div>
@@ -403,7 +405,6 @@
          <div class="cart-view-area">
            <div class="cart-view-table">
               <div><?php echo $html;?></div>
-             
            </div>
          </div>
        </div>

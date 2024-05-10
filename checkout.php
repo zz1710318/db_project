@@ -41,7 +41,8 @@
 session_start();
 
 // 處理越權查看以及錯誤登入
-if (!isset($_SESSION['account'])) {
+if (!isset($_SESSION['account'])) 
+{
   echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
   exit();
 } 
@@ -52,7 +53,8 @@ include "db.php";
 $html = "";
 $total = 0;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST") 
+{
   // Retrieve form data
   $recipient = isset($_POST['recipient']) ? $_POST['recipient'] : '';
   $address = isset($_POST['address']) ? $_POST['address'] : '';
@@ -110,7 +112,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               $stmtClearCart->execute();
 
               echo "<script>alert('已送出訂單');</script>";
-          } catch(PDOException $e) {
+          } 
+          catch(PDOException $e) 
+          {
               // Rollback transaction on error
               $link->rollback();
               echo "<script>alert('送出訂單失敗: " . $e->getMessage() . "');</script>";
@@ -119,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 }
 
-$sql = "SELECT * FROM product t1
+        $sql = "SELECT * FROM product t1
                 JOIN cart t2 ON t1.PID = t2.PID
                 WHERE t2.ID = :ID";
         $stmt = $link->prepare($sql);
@@ -224,7 +228,7 @@ $sql = "SELECT * FROM product t1
               <!-- logo  -->
               <div class="aa-logo">
                 <!-- Text based logo -->
-                <a href="organ.php">
+                <a href="menu.php">
                   <span class="fa fa-shopping-cart"></span>
                   <p>DE<strong>Shop</strong> <span>Your Shopping Partner</span></p>
                 </a>
@@ -233,7 +237,7 @@ $sql = "SELECT * FROM product t1
               </div>
               <!-- / logo  -->
                <!-- cart box -->
-               <div class="aa-cartbox">
+  <div class="aa-cartbox">
     <a class="aa-cart-link" href="#">
         <span class="fa fa-shopping-basket"></span>
         <span class="aa-cart-title">SHOPPING CART</span>
@@ -261,8 +265,10 @@ $sql = "SELECT * FROM product t1
 
             $displayed_count = 0; // 初始化已顯示計數器
 
-            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                if ($displayed_count < 3) {
+            while ($clothes = $stmt->fetch(PDO::FETCH_ASSOC)) 
+            {
+                if ($displayed_count < 3) 
+                {
                     echo "<li>";
                     echo "<a class='aa-cartbox-img' href='#'><img src='data:image/jpeg;base64," . base64_encode($clothes['image']) . "' alt='Product Image'></a>";
                     echo "<div class='aa-cartbox-info'>";
@@ -273,7 +279,9 @@ $sql = "SELECT * FROM product t1
                     echo "</div></li>";
 
                     $displayed_count++; // 每顯示一個商品，計數器加1
-                } else {
+                } 
+                else 
+                {
                     // 如果已顯示計數器超過3，則跳出迴圈
                     break;
                 }
@@ -335,7 +343,7 @@ $sql = "SELECT * FROM product t1
           <div class="navbar-collapse collapse">
             <!-- Left nav -->
             <ul class="nav navbar-nav">
-              <li><a href="organ.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
+              <li><a href="menu.php"><img src="img/home.jpg" alt="Home" style="margin-top: -8px; filter: brightness(0) invert(1);"></a></li>
               <li><a href="productall.php">ALL</a></li> 
               <li><a href="product1.php">Short Sleeves <span class="caret"></span></a>
                 <ul class="dropdown-menu">                
@@ -374,7 +382,7 @@ $sql = "SELECT * FROM product t1
       <div class="aa-catg-head-banner-content">
         <h2>Checkout Page</h2>
         <ol class="breadcrumb">
-          <li><a href="organ.php">Home</a></li>                   
+          <li><a href="menu.php">Home</a></li>                   
           <li class="active">Checkout</li>
         </ol>
       </div>
@@ -440,10 +448,10 @@ $sql = "SELECT * FROM product t1
                   </div>
                   <h4>Payment Method</h4>
                   <div class="aa-payment-method">                    
-    <label for="CashOnDelivery"><input type="radio" id="CashOnDelivery" value="Cash on Delivery" name="method" checked> Cash on Delivery </label>
-    <label for="CreditCardPayment"><input type="radio" id="CreditCardPayment" value="Credit card payment" name="method"> Credit card payment </label>
-    <input type="submit" value="Place Order" class="aa-browse-btn">                
-</div>
+                    <label for="CashOnDelivery"><input type="radio" id="CashOnDelivery" value="Cash on Delivery" name="method" checked> Cash on Delivery </label>
+                    <label for="CreditCardPayment"><input type="radio" id="CreditCardPayment" value="Credit card payment" name="method"> Credit card payment </label>
+                    <input type="submit" value="Place Order" class="aa-browse-btn">                
+                  </div>
                 </div>
               </div>
             </div>
