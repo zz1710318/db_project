@@ -423,15 +423,12 @@
                   <label for="">Sort by</label>
                   <select name="">
                     <option value="1" selected="Default">Default</option>
-                    <option value="2">Price: High to Low</option>
-                    <option value="3">Price: Low to High</option>
                   </select>
                 </form>
                 <form action="" class="aa-show-form">
                   <label for="">Show</label>
                   <select name="">
-                    <option value="1" selected="12">9</option>
-                    <option value="2">12</option>
+                    <option value="1" selected="9">9</option>
                   </select>
                 </form>
               </div>
