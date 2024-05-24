@@ -47,7 +47,7 @@
         } 
         
         // 處理管理員調出使用者清單
-        include "db.php";
+        include "database.php";
         $sql = "SELECT * FROM product t1
                 JOIN wishlist t2 ON t1.PID = t2.PID
                 WHERE t2.ID = :ID";
@@ -105,7 +105,7 @@
 
     <?php
         if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deletePID']))){
-            include "db.php";
+            include "database.php";
             $deleteProductID = $_POST['deletePID'];
             $stmt = $link -> prepare("DELETE FROM `wishlist` WHERE PID = :deletePID");
             $stmt->bindParam(':deletePID', $deleteProductID);

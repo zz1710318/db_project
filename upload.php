@@ -54,7 +54,7 @@
     }
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        include "db.php";
+        include "database.php";
         
         $type = $_POST['type'];
         $name = $_POST['name'];

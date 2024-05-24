@@ -47,7 +47,7 @@
         exit(); 
     }
 
-    include "db.php";
+    include "database.php";
     
     try 
     {
@@ -72,7 +72,7 @@
 
     <?php
     if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['update']))){ //update stands for the field name
-        include "db.php";
+        include "database.php";
         $fieldToUpdate = $_POST['update'];
         $updateValue = $_POST[$fieldToUpdate]?? '';
         // echo "<script>alert('".$fieldToUpdate.$updateValue."');</script>";

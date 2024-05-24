@@ -41,7 +41,7 @@
   
     <?php
 session_start();
-require_once 'db.php';
+require_once 'database.php';
 
 if (!isset($_SESSION['account'])) {
     echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";

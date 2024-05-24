@@ -44,7 +44,7 @@
 
 		session_start();
 
-		include "db.php";
+		include "database.php";
 
 		if ($_SERVER['REQUEST_METHOD'] === "POST")
     {

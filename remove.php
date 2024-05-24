@@ -53,7 +53,7 @@
     }
 
     // 處理管理員調出使用者清單
-    include "db.php";
+    include "database.php";
     
     // Pagination variables
     $limit = 10; // Number of items per page
@@ -120,7 +120,7 @@
     
     <?php
         if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deletePID']))){
-            include "db.php";
+            include "database.php";
             $deleteProductID = $_POST['deletePID'];
             $stmt = $link -> prepare("DELETE FROM `product` WHERE PID = :deletePID");
             $stmt->bindParam(':deletePID', $deleteProductID);

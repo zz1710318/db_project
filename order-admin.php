@@ -47,7 +47,7 @@
         } 
         
         // 處理管理員調出使用者清單
-        include "db.php";
+        include "database.php";
         
         $member_id = $_SESSION['ID'];
         $member_account = $_SESSION['account'];
@@ -82,7 +82,7 @@
     <?php
     if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['cancelOrder']))
     {
-        include "db.php";
+        include "database.php";
         $deleteOrderID = $_POST['cancelOrder'];
         $stmt = $link -> prepare("DELETE FROM `orders` WHERE `OID` = :deleteOID");
         $stmt->bindParam(':deleteOID', $deleteOrderID);

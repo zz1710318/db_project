@@ -48,7 +48,7 @@ if (!isset($_SESSION['account'])) {
 } 
 
 // 處理管理員調出使用者清單
-include "db.php";
+include "database.php";
 
 $member_id = $_SESSION['ID'];
 

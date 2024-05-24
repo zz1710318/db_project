@@ -54,7 +54,7 @@
         }
         
         // 處理管理員調出使用者清單
-        include "db.php";
+        include "database.php";
         $stmt = $link->prepare("SELECT * FROM `members`");
         $stmt->execute();
         
@@ -73,7 +73,7 @@
     <?php
         if (($_SERVER['REQUEST_METHOD'] === "POST")&&(isset($_POST['deleteID'])))
         {
-            include "db.php";
+            include "database.php";
             $deleteUserID = $_POST['deleteID'];
             $stmt = $link -> prepare("DELETE FROM `members` WHERE ID = :deleteID");
             $stmt->bindParam(':deleteID', $deleteUserID);

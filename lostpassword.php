@@ -40,7 +40,7 @@
     <?php
         session_start();
         if ($_SERVER['REQUEST_METHOD'] === "POST"){
-            include "db.php";
+            include "database.php";
             $account = $_POST['account']?? '';
             $phone = $_POST['phone']?? '';
             $email = $_POST['email']?? '';

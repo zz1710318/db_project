@@ -46,7 +46,7 @@
         exit();
     } 
     
-    include "db.php";
+    include "database.php";
     
     if ($_SERVER["REQUEST_METHOD"] == "POST") 
     {
@@ -66,7 +66,7 @@
       }
       elseif (isset($_POST['deletePID'])) 
       {
-          include "db.php";
+          include "database.php";
           $deleteProductID = $_POST['deletePID'];
           $stmt = $link->prepare("DELETE FROM `cart` WHERE PID = :deletePID");
           $stmt->bindParam(':deletePID', $deleteProductID);

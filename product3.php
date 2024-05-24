@@ -39,13 +39,13 @@
     <![endif]-->
     <?php
       session_start();
-      require_once 'db.php';
+      require_once 'database.php';
       if (!isset($_SESSION['account'])) 
       {
         echo "<script>alert('偵測到未登入'); window.location.href = 'login.php';</script>";
         exit(); 
       }
-      include "db.php";
+      include "database.php";
       $limit = 9; // Number of items per page
       $page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
       $offset = ($page - 1) * $limit; // Offset for SQL query
